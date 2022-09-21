@@ -7,15 +7,18 @@ import (
 	"strings"
 )
 
+var router = mux.NewRouter()
+
 func main() {
-	router := mux.NewRouter()
+
 	router.HandleFunc("/", homeHandler).Methods("GET", "POST").Name("home")
-	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
+	router.HandleFunc("/about", aboutHandler).Methods("get").Name("about")
 
 	// article
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
+	router.HandleFunc("/articles/create", articleCreateHandler).Methods("GET").Name("articles.create")
 
 	// 404
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
@@ -32,6 +35,26 @@ func main() {
 	fmt.Println("articleURL：", articleURL)
 
 	http.ListenAndServe(":3000", removeTrailingSlash(router))
+}
+
+func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
+	html := `
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<title>创建文章 —— 我的技术博客</title>
+		</head>
+		<body>
+			<form action="%s" method="post">
+				<p><input type="text" name="title"></p>
+				<p><textarea name="body" cols="30" rows="10"></textarea></p>
+				<p><button type="submit">提交</button></p>
+			</form>
+		</body>
+		</html>
+	`
+	url, _ := router.Get("articles.store").URL()
+	fmt.Fprintf(w, html, url)
 }
 
 func removeTrailingSlash(handler http.Handler) http.Handler {
