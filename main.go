@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
+	"strings"
 )
 
 func main() {
@@ -19,8 +20,10 @@ func main() {
 	// 404
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
-	// 中间件
+	// 中间件 text/html
 	router.Use(forceHTMLMiddleware)
+	// router优化：去掉结尾的"/"
+	// router.Use(removeTrailingSlash)
 
 	// 获取url
 	homeURL := router.Get("home")
@@ -28,7 +31,16 @@ func main() {
 	articleURL, _ := router.Get("articles.show").URL("id", "23")
 	fmt.Println("articleURL：", articleURL)
 
-	http.ListenAndServe(":3000", router)
+	http.ListenAndServe(":3000", removeTrailingSlash(router))
+}
+
+func removeTrailingSlash(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+		}
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func forceHTMLMiddleware(handler http.Handler) http.Handler {
