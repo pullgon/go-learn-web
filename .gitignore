@@ -67,3 +67,6 @@ app/*/*/*/internal/data/*_rc.go
 !app/*/*/*/internal/data/ent/generate.go
 
 __debug_bin
+
+# air
+tmp
